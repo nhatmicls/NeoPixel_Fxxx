@@ -1,0 +1,4 @@
+neopixel.c:22:6:init_neopixel	16	static
+neopixel.c:31:6:render_neopixel	16	static,ignoring_inline_asm
+neopixel.c:54:6:HAL_TIM_PWM_PulseFinishedCallback	24	static
+neopixel.c:77:6:HAL_TIM_PWM_PulseFinishedHalfCpltCallback	24	static
