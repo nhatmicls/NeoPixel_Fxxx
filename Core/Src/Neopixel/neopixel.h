@@ -20,15 +20,19 @@
 typedef enum
 {
 	HALT = 0,
+	START,
+	FALLING,
+	UPPING,
+	RAINFALL,
 	FULL_RED
-}modeled_t;
+}_mode_t;
 
 typedef struct
 {
 	uint8_t red;
 	uint8_t blue;
 	uint8_t green;
-}uneo;
+}color;
 
 typedef enum
 {
@@ -37,8 +41,14 @@ typedef enum
 	WS2812B
 }type_led;
 
-extern modeled_t modeled;
+extern _mode_t mode;
+extern color allrgb[8];
 
+void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay);
 void init_neopixel(uint16_t in_numbers_of_led, type_led in_type_of_led);
+void all_black_render(void);
+void render_neopixel(void);
+void render(_mode_t INPUT_MODE,uint8_t blue,uint8_t red,uint8_t green,uint8_t delay);
+void one_color_render(uint8_t blue,uint8_t red,uint8_t green);
 
 #endif /* SRC_NEOPIXEL_NEOPIXEL_H_ */

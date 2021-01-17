@@ -7,17 +7,21 @@
 
 #include "neopixel.h"
 
-uint16_t RWL[50]={ON,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,ON,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,ON,ON,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF,ON,OFF,OFF,OFF,OFF,OFF,OFF,OFF,OFF};
+extern TIM_HandleTypeDef htim8;
+extern DMA_HandleTypeDef hdma_tim8_ch1;
+
+void all_black_render(void);
+void render_neopixel(void);
 
 uint16_t numbers_of_led;
 type_led type_of_led=NOTDEFINE;
-extern modeled_t modeled=HALT;
+_mode_t mode=HALT,last_mode=HALT;
 
-uint16_t buffer[48];
-uint8_t present_led_counting=0;
+uint16_t buffer[50];
+uint8_t present_led_counting=0,counting=0;
 
-extern TIM_HandleTypeDef htim8;
-extern DMA_HandleTypeDef hdma_tim8_ch1;
+color allrgb[8];
+uint8_t enable_transmit=0;
 
 void init_neopixel(uint16_t MAX_STRING_LED_LENGTH, type_led in_type_of_led)
 {
@@ -26,27 +30,127 @@ void init_neopixel(uint16_t MAX_STRING_LED_LENGTH, type_led in_type_of_led)
 	else
 		numbers_of_led==MAX_LED;
 	type_of_led=in_type_of_led;
+	all_black_render();
+}
+
+void all_black_render(void)
+{
+	uint_fast16_t var;
+	for (var = 0; var < 8; ++var)
+	{
+		allrgb[var].blue=0;
+		allrgb[var].red=0;
+		allrgb[var].green=0;
+	}
+	mode=START;
+	render_neopixel();
+}
+
+void one_color_render(uint8_t blue,uint8_t red,uint8_t green)
+{
+	uint_fast16_t var;
+	for (var = 0; var < 8; ++var)
+	{
+		allrgb[var].blue=blue;
+		allrgb[var].red=red;
+		allrgb[var].green=green;
+	}
+	mode=START;
+	render_neopixel();
+}
+
+void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay)
+{
+	uint_fast16_t var,var1;
+	for (var = 0; var < 8; ++var) {
+		for (var1 = 0; var1 < 8; ++var1)
+		{
+			allrgb[var1].green=green*((var==var1)?1:0);
+			allrgb[var1].red=red*((var==var1)?1:0);
+			allrgb[var1].blue=blue*((var==var1)?1:0);
+		}
+		HAL_Delay(delay);
+		render_neopixel();
+	}
+}
+
+void render_upping_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay)
+{
+	int_fast16_t var,var1;
+	for (var = 7; var >= 0; --var) {
+		for (var1 = 0; var1 < 8; ++var1)
+		{
+			allrgb[var1].green=green*((var==var1)?1:0);
+			allrgb[var1].red=red*((var==var1)?1:0);
+			allrgb[var1].blue=blue*((var==var1)?1:0);
+		}
+		HAL_Delay(delay);
+		render_neopixel();
+	}
+}
+
+void render(_mode_t INPUT_MODE,uint8_t blue,uint8_t red,uint8_t green,uint8_t delay)
+{
+	mode=INPUT_MODE;
+	if(last_mode!=mode)
+		counting=0;
+	switch (INPUT_MODE) {
+		case FALLING:
+			render_falling_mode(blue, red, green, delay);
+			break;
+		case UPPING:
+			render_upping_mode(blue, red, green, delay);
+			break;
+		default:
+			break;
+	}
+	last_mode=mode;
+	mode=HALT;
 }
 
 void render_neopixel()
 {
 	uint_fast16_t var;
-	if(type_of_led==NOTDEFINE)
+	if(type_of_led!=NOTDEFINE)
 	{
 		present_led_counting=0;
 		for (var = 0; var < 8; ++var)
 		{
-			buffer[var]=RWL[var];
-			buffer[var+8]=RWL[var+8];
-			buffer[var+16]=RWL[var+16];
-			buffer[var+24]=RWL[var+24];
-			buffer[var+32]=RWL[var+32];
-			buffer[var+40]=RWL[var+40];
+			buffer[var]=OFF<<(((allrgb[0].green<<var)&0x80)>0);
+			buffer[var+8]=OFF<<(((allrgb[0].red<<var)&0x80)>0);
+			buffer[var+16]=OFF<<(((allrgb[0].blue<<var)&0x80)>0);
+			buffer[var+24]=OFF<<(((allrgb[1].green<<var)&0x80)>0);
+			buffer[var+32]=OFF<<(((allrgb[1].red<<var)&0x80)>0);
+			buffer[var+40]=OFF<<(((allrgb[1].blue<<var)&0x80)>0);
 		}
 		HAL_TIM_PWM_Start_DMA(&htim8, TIM_CHANNEL_1, (uint32_t *)buffer, 48);
 	}
 	else
 	{
+		__NOP();
+	}
+}
+
+void prepare_next_led(uint16_t position,uint8_t alpha)
+{
+	uint_fast8_t var;
+	++position;
+	if(alpha==1)
+	{
+		for (var = 0; var < 8; ++var) {
+			buffer[var]=OFF<<(((allrgb[position].green<<var)&0x80)>0);
+			buffer[var+8]=OFF<<(((allrgb[position].red<<var)&0x80)>0);
+			buffer[var+16]=OFF<<(((allrgb[position].blue<<var)&0x80)>0);
+		}
+		__NOP();
+	}
+	else
+	{
+		for (var = 0; var < 8; ++var) {
+			buffer[var+24]=OFF<<(((allrgb[position].green<<var)&0x80)>0);
+			buffer[var+32]=OFF<<(((allrgb[position].red<<var)&0x80)>0);
+			buffer[var+40]=OFF<<(((allrgb[position].blue<<var)&0x80)>0);
+		}
 		__NOP();
 	}
 }
@@ -57,6 +161,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 	if(present_led_counting+2<numbers_of_led)
 	{
 		++present_led_counting;
+		prepare_next_led(present_led_counting,0);
 	}
 	else if(present_led_counting<numbers_of_led)
 	{
@@ -69,7 +174,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 	}
 	else
 	{
-		modeled=HALT;
+		mode=HALT;
 		HAL_TIM_PWM_Stop_DMA(&htim8, TIM_CHANNEL_1);
 	}
 }
@@ -77,17 +182,23 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim)
 {
 	uint_fast8_t var;
-	if(present_led_counting+2<numbers_of_led)
+	if(enable_transmit>0)
 	{
-		++present_led_counting;
-	}
-	else if(present_led_counting<numbers_of_led)
-	{
-		++present_led_counting;
-		for (var = 0; var < 8; ++var) {
-			buffer[var]=0;
-			buffer[var+8]=0;
-			buffer[var+16]=0;
+		if(present_led_counting+2<numbers_of_led)
+		{
+			++present_led_counting;
+			prepare_next_led(present_led_counting,1);
+		}
+		else if(present_led_counting<numbers_of_led)
+		{
+			++present_led_counting;
+			for (var = 0; var < 8; ++var) {
+				buffer[var]=0;
+				buffer[var+8]=0;
+				buffer[var+16]=0;
+			}
 		}
 	}
+	else
+		enable_transmit++;
 }
