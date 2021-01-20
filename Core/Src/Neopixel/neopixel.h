@@ -11,11 +11,23 @@
 #include "stm32f4xx_hal.h"
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+#include <stdlib.h>
+/*
+ * Configure zone
+ * */
+#define NUMBEROFLED 60
 
-#define MAX_LED 1000
+/*
+ * Configure if you know what to change
+ * */
 #define ON 		58
 #define OFF		29
 #define RES		0
+
+#define BUFFERLED NUMBEROFLED+2
+#define STARTBUFFERLED 2
+#define ENDBUFFERLED BUFFERLED
 
 typedef enum
 {
@@ -42,13 +54,15 @@ typedef enum
 }type_led;
 
 extern _mode_t mode;
-extern color allrgb[10];
+extern color allrgb[BUFFERLED];
 
-void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay);
 void init_neopixel(uint16_t in_numbers_of_led, type_led in_type_of_led);
 void all_black_render(void);
 void render_neopixel(void);
 void render(_mode_t INPUT_MODE,uint8_t blue,uint8_t red,uint8_t green,uint8_t delay);
 void one_color_render(uint8_t blue,uint8_t red,uint8_t green);
+void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay);
+void render_raising_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay);
+void render_rainbow_mode();
 
 #endif /* SRC_NEOPIXEL_NEOPIXEL_H_ */

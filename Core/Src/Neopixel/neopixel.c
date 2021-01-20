@@ -8,35 +8,59 @@
 #include "neopixel.h"
 
 #define TIMER_CHOICE 3
-#define BUFFERLED 10
-#define STARTBUFFERLED BUFFERLED-8
-#define ENDBUFFERLED BUFFERLED
 
 extern TIM_HandleTypeDef htim8;
 extern DMA_HandleTypeDef hdma_tim8_ch1;
-extern TIM_HandleTypeDef htim3;
-extern DMA_HandleTypeDef hdma_tim3_ch4;
 
 void all_black_render(void);
 void render_neopixel(void);
 
-uint16_t numbers_of_led;
+uint16_t numbers_of_led=BUFFERLED;
 type_led type_of_led=NOTDEFINE;
 _mode_t mode=HALT,last_mode=HALT;
 
 uint16_t buffer[50];
 uint8_t present_led_counting=0,counting=0;
 
+int R=0,B=0,G=0,angle=0;
+
 color allrgb[BUFFERLED];
 uint8_t enable_transmit=0;
 
+void hsvtorbg(float H,float S,float V)
+{
+	float C=S*V;
+	float A=fmod(H/60.0, 2);
+	float X1=(1.0-fabs((float)(A-1.0)));
+	float X=C*X1;
+	float m=V-C;
+	float r=0,b=0,g=0;
+	if(H >= 0 && H < 60){
+		r = C,g = X,b = 0;
+	}
+	else if(H >= 60 && H < 120){
+		r = X,g = C,b = 0;
+	}
+	else if(H >= 120 && H < 180){
+		r = 0,g = C,b = X;
+	}
+	else if(H >= 180 && H < 240){
+		r = 0,g = X,b = C;
+	}
+	else if(H >= 240 && H < 300){
+		r = X,g = 0,b = C;
+	}
+	else{
+		r = C,g = 0,b = X;
+	}
+	R = (r+m)*255;
+	G = (g+m)*255;
+	B = (b+m)*255;
+	__NOP();
+}
+
 void init_neopixel(uint16_t MAX_STRING_LED_LENGTH, type_led in_type_of_led)
 {
-	uint_fast16_t var;
-	if(MAX_STRING_LED_LENGTH<MAX_LED)
-		numbers_of_led=MAX_STRING_LED_LENGTH;
-	else
-		numbers_of_led==MAX_LED;
 	type_of_led=in_type_of_led;
 	all_black_render();
 }
@@ -67,6 +91,26 @@ void one_color_render(uint8_t blue,uint8_t red,uint8_t green)
 	render_neopixel();
 }
 
+void render_rainbow_mode()
+{
+	uint_fast16_t var;
+	if(++angle>360)
+		angle=0;
+	hsvtorbg(angle, 0.9, 0.9);
+	for (var = STARTBUFFERLED; var < ENDBUFFERLED; ++var) {
+		allrgb[var].green=G;
+		allrgb[var].red=R;
+		allrgb[var].blue=B;
+	}
+	HAL_Delay(10);
+	render_neopixel();
+}
+
+void render_rainbow_groupmode()
+{
+	uint_fast16_t var;
+}
+
 void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay)
 {
 	uint_fast16_t var,var1;
@@ -82,7 +126,7 @@ void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay)
 	}
 }
 
-void render_upping_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay)
+void render_raising_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay)
 {
 	int_fast16_t var,var1;
 	for (var = ENDBUFFERLED-1; var >= STARTBUFFERLED; --var) {
@@ -107,7 +151,7 @@ void render(_mode_t INPUT_MODE,uint8_t blue,uint8_t red,uint8_t green,uint8_t de
 			render_falling_mode(blue, red, green, delay);
 			break;
 		case UPPING:
-			render_upping_mode(blue, red, green, delay);
+			render_raising_mode(blue, red, green, delay);
 			break;
 		default:
 			break;
@@ -131,11 +175,7 @@ void render_neopixel()
 			buffer[var+32]=0<<(((allrgb[1].red<<var)&0x80)>0);
 			buffer[var+40]=0<<(((allrgb[1].blue<<var)&0x80)>0);
 		}
-#if(TIMER_CHOICE==3)
 		HAL_TIM_PWM_Start_DMA(&htim8, TIM_CHANNEL_1, (uint32_t *)buffer, 48);
-#else
-		HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_4, (uint32_t *)buffer, 48);
-#endif
 	}
 	else
 	{
@@ -188,11 +228,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 	{
 		enable_transmit=0;
 		mode=HALT;
-#if(TIMER_CHOICE==3)
 		HAL_TIM_PWM_Stop_DMA(&htim8, TIM_CHANNEL_1);
-#else
-		HAL_TIM_PWM_Stop_DMA(&htim3, TIM_CHANNEL_4);
-#endif
 	}
 }
 

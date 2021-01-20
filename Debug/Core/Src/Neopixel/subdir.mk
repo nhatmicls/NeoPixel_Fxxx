@@ -6,11 +6,11 @@
 C_SRCS += \
 ../Core/Src/Neopixel/neopixel.c 
 
-OBJS += \
-./Core/Src/Neopixel/neopixel.o 
-
 C_DEPS += \
 ./Core/Src/Neopixel/neopixel.d 
+
+OBJS += \
+./Core/Src/Neopixel/neopixel.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes
