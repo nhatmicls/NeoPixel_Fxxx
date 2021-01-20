@@ -42,7 +42,7 @@ typedef enum
 }type_led;
 
 extern _mode_t mode;
-extern color allrgb[8];
+extern color allrgb[10];
 
 void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay);
 void init_neopixel(uint16_t in_numbers_of_led, type_led in_type_of_led);
