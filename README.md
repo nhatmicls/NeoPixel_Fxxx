@@ -79,7 +79,7 @@ HSV[1] is RED.
 
 HSV[2] is BLUE.
 
-### STEP 4: CUSTOME EFFECT
+### STEP 4: CUSTOMIZE EFFECT
 
 All data led must be store in here
 

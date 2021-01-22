@@ -63,7 +63,6 @@ void render_neopixel(void);
 void one_color_render(uint8_t blue,uint8_t red,uint8_t green);
 void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay);
 void render_raising_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay);
-void render_rainbow_mode(uint16_t delay);
 void render_rainbow_cycle_mode(uint16_t delay);
 
 #endif /* SRC_NEOPIXEL_NEOPIXEL_H_ */
