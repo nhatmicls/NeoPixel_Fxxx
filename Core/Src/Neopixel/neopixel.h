@@ -17,6 +17,7 @@
  * Configure zone
  * */
 #define NUMBEROFLED 60
+#define LEDPERZONE 1
 
 /*
  * Configure if you know what to change
@@ -28,6 +29,7 @@
 #define BUFFERLED NUMBEROFLED+2
 #define STARTBUFFERLED 2
 #define ENDBUFFERLED BUFFERLED
+#define ZONE (NUMBEROFLED/LEDPERZONE)
 
 typedef enum
 {
@@ -59,10 +61,11 @@ extern color allrgb[BUFFERLED];
 void init_neopixel(uint16_t in_numbers_of_led, type_led in_type_of_led);
 void all_black_render(void);
 void render_neopixel(void);
-void render(_mode_t INPUT_MODE,uint8_t blue,uint8_t red,uint8_t green,uint8_t delay);
+void render(_mode_t INPUT_MODE,uint8_t blue,uint8_t red,uint8_t green,uint16_t delay);
 void one_color_render(uint8_t blue,uint8_t red,uint8_t green);
-void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay);
-void render_raising_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay);
-void render_rainbow_mode();
+void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay);
+void render_raising_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay);
+void render_rainbow_mode(uint16_t delay);
+void render_rainbow_cycle_mode(uint16_t delay);
 
 #endif /* SRC_NEOPIXEL_NEOPIXEL_H_ */

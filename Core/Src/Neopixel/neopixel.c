@@ -22,13 +22,12 @@ _mode_t mode=HALT,last_mode=HALT;
 uint16_t buffer[50];
 uint8_t present_led_counting=0,counting=0;
 
-int R=0,B=0,G=0,angle=0;
-
 color allrgb[BUFFERLED];
 uint8_t enable_transmit=0;
 
-void hsvtorbg(float H,float S,float V)
+static uint8_t *hsvtorbg(float H,float S,float V)
 {
+	static uint8_t HVS[3];
 	float C=S*V;
 	float A=fmod(H/60.0, 2);
 	float X1=(1.0-fabs((float)(A-1.0)));
@@ -53,10 +52,10 @@ void hsvtorbg(float H,float S,float V)
 	else{
 		r = C,g = 0,b = X;
 	}
-	R = (r+m)*255;
-	G = (g+m)*255;
-	B = (b+m)*255;
-	__NOP();
+	HVS[0] = (r+m)*255;
+	HVS[1] = (g+m)*255;
+	HVS[2] = (b+m)*255;
+	return HVS;
 }
 
 void init_neopixel(uint16_t MAX_STRING_LED_LENGTH, type_led in_type_of_led)
@@ -91,27 +90,44 @@ void one_color_render(uint8_t blue,uint8_t red,uint8_t green)
 	render_neopixel();
 }
 
-void render_rainbow_mode()
+void render_rainbow_mode(uint16_t delay)
 {
 	uint_fast16_t var;
+	static uint16_t angle;
 	if(++angle>360)
 		angle=0;
-	hsvtorbg(angle, 0.9, 0.9);
+	uint8_t *hvs = hsvtorbg(angle, 0.9, 0.9);
 	for (var = STARTBUFFERLED; var < ENDBUFFERLED; ++var) {
-		allrgb[var].green=G;
-		allrgb[var].red=R;
-		allrgb[var].blue=B;
+		allrgb[var].green=*hvs;
+		allrgb[var].red=*(hvs+1);
+		allrgb[var].blue=*(hvs+2);
 	}
-	HAL_Delay(10);
+	HAL_Delay(delay);
 	render_neopixel();
 }
 
-void render_rainbow_groupmode()
+void render_rainbow_cycle_mode(uint16_t delay)
 {
-	uint_fast16_t var;
+	uint_fast16_t var,var1;
+	static uint16_t angle,angle_cache;
+	if(++angle>360)
+		angle=0;
+	for (var = 0; var < ZONE; ++var) {
+		angle_cache=angle+(360/ZONE)*var;
+		if(angle_cache>360)
+			angle_cache=(angle+(360/ZONE)*var)-360;
+		uint8_t *hvs = hsvtorbg(angle_cache, 0.9, 0.9);
+		for (var1 = var*LEDPERZONE; var1 < (var+1)*LEDPERZONE; ++var1) {
+			allrgb[var1].green=*hvs;
+			allrgb[var1].red=*(hvs+1);
+			allrgb[var1].blue=*(hvs+2);
+		}
+	}
+	HAL_Delay(delay);
+	render_neopixel();
 }
 
-void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay)
+void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay)
 {
 	uint_fast16_t var,var1;
 	for (var = STARTBUFFERLED; var < ENDBUFFERLED; ++var) {
@@ -126,7 +142,7 @@ void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay)
 	}
 }
 
-void render_raising_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay)
+void render_raising_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay)
 {
 	int_fast16_t var,var1;
 	for (var = ENDBUFFERLED-1; var >= STARTBUFFERLED; --var) {
@@ -141,7 +157,7 @@ void render_raising_mode(uint8_t blue,uint8_t red,uint8_t green,uint8_t delay)
 	}
 }
 
-void render(_mode_t INPUT_MODE,uint8_t blue,uint8_t red,uint8_t green,uint8_t delay)
+void render(_mode_t INPUT_MODE,uint8_t blue,uint8_t red,uint8_t green,uint16_t delay)
 {
 	mode=INPUT_MODE;
 	if(last_mode!=mode)
@@ -194,7 +210,6 @@ void prepare_next_led(uint16_t position,uint8_t alpha)
 			buffer[var+8]=OFF<<(((allrgb[position].red<<var)&0x80)>0);
 			buffer[var+16]=OFF<<(((allrgb[position].blue<<var)&0x80)>0);
 		}
-		__NOP();
 	}
 	else
 	{
@@ -203,7 +218,6 @@ void prepare_next_led(uint16_t position,uint8_t alpha)
 			buffer[var+32]=OFF<<(((allrgb[position].red<<var)&0x80)>0);
 			buffer[var+40]=OFF<<(((allrgb[position].blue<<var)&0x80)>0);
 		}
-		__NOP();
 	}
 }
 

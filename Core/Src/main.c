@@ -117,7 +117,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  if(mode==HALT)
 	  {
-		  render_rainbow_mode();
+		  render_rainbow_cycle_mode(5);
 	  }
   }
   /* USER CODE END 3 */
