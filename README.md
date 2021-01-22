@@ -28,27 +28,48 @@ Simply connect the 5V STM32F4DISCOVERY to 5V LED, GND connect to GND and DIN con
 ### STEP 3: USE LIBRARY
 
 First, time to configure what type of LED you are using.
-> init_neopixel(WS2812);
+
+```c++
+init_neopixel(WS2812);
+```
 
 Second, make all led is black.
->all_black_render();
+
+```c++
+all_black_render();
+```
 
 Some effect I imported to library.
 
 One color in all led
->void one_color_render(uint8_t blue,uint8_t red,uint8_t green);
+
+```c++
+void one_color_render(uint8_t blue,uint8_t red,uint8_t green);
+```
 
 Falling mode
->void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay);
+
+```c++
+void render_falling_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay);
+```
 
 Raising mode
->void render_raising_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay);
+
+```c++
+void render_raising_mode(uint8_t blue,uint8_t red,uint8_t green,uint16_t delay);
+```
 
 Rainbow mode
->void render_rainbow_cycle_mode(uint16_t delay);
+
+```c++
+void render_rainbow_cycle_mode(uint16_t delay);
+```
 
 I also add function to change HSV to RGB
->static uint8_t *hsvtorbg(float H,float S,float V);
+
+```c++
+static uint8_t *hsvtorbg(float H,float S,float V);
+```
 
 With **H** for **Hue**, **S** for **Saturation**, **V** for **Value**. And it will return a pointer which point to array **HVS[3]**.
 
@@ -58,17 +79,27 @@ HSV[1] is RED.
 
 HSV[2] is BLUE.
 
-All data led will be store to here
->color allrgb[BUFFERLED];
+### STEP 4: CUSTOME EFFECT
+
+All data led must be store in here
+
+```c++
+color allrgb[BUFFERLED];
+```
 
 **allrbg[BUFFERLED]** is a struct have 3 variable of RGB for per led
 
-`typedef struct
+```c++
+typedef struct
 {
   uint8_t red;
   uint8_t blue;
   uint8_t green;
-}color;`
+}color;
+```
 
-Use "render_neopixel" for display some effect you add.
->void render_neopixel(void);
+After you save your data to array so you just use "render_neopixel" for display some effect you add.
+
+```c++
+void render_neopixel(void);
+```
