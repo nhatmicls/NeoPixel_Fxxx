@@ -103,7 +103,7 @@ int main(void)
   MX_DMA_Init();
   MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
-  init_neopixel(60, WS2812);
+  init_neopixel(WS2812);
   all_black_render();
   /* USER CODE END 2 */
 
