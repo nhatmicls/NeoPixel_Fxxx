@@ -103,3 +103,6 @@ After you save your data to array so you just use "render_neopixel" for display 
 ```c++
 void render_neopixel(void);
 ```
+
+# Reference
+https://www.thevfdcollective.com/blog/stm32-and-sk6812-rgbw-led
